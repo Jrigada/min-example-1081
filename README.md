@@ -1,66 +1,81 @@
-## Foundry
+## Minimal Example for foundry-zksync Issue #1081
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository was created to reproduce [foundry-zksync issue #1081](https://github.com/matter-labs/foundry-zksync/issues/1081).
 
-Foundry consists of:
+## Issue Description
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+**Problem:** Running `forge test --zksync` crashes with an "unwrap panic" in the zkSync cheatcode runner, specifically failing to find a contract.
 
-## Documentation
+**Expected Behavior:** The test should revert or fail with an assertion, not crash the entire process.
 
-https://book.getfoundry.sh/
+**Actual Behavior:** The application panics with the error message: "failed finding contract for 0x6080604052..."
+
+**Error Location:** `crates/strategy/zksync/src/cheatcode/runner/mod.rs:573`
+
+**Environment from Original Report:**
+- Forge Version: 1.0.0-foundry-zksync-v0.0.20
+- OS: Ubuntu 24.04.1 LTS (WSL2)
+- zkSolc: 1.5.15
+
+## Reproduction Steps
+
+1. Enable zkSync support in `foundry.toml`:
+```toml
+[profile.default.zksync]
+enabled = true
+codegen = "evmla"
+```
+
+2. Run `forge test --zksync`
+
+## Current Status
+
+**⚠️ ISSUE NOT REPRODUCED**
+
+This repository has the correct zkSync configuration but the tests **pass successfully** instead of crashing with the reported panic. This suggests either:
+
+- The issue has been fixed in recent versions
+- Specific conditions are needed to trigger the panic that aren't present in this minimal setup
+- Additional configuration or contract patterns are required
+
+## Test Results
+
+```bash
+$ forge test --zksync
+No files changed, compilation skipped
+No files changed, compilation skipped
+
+Ran 2 tests for test/Counter.t.sol:CounterTest
+[PASS] testFuzz_SetNumber(uint256) (runs: 256, μ: 993879674, ~: 993873225)
+[PASS] test_Increment() (gas: 993869761)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 870.09ms (600.55ms CPU time)
+
+Ran 1 test suite in 875.08ms (870.09ms CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)
+```
+
+## Repository Structure
+
+- `src/Counter.sol` - Simple counter contract
+- `test/Counter.t.sol` - Basic tests for the counter
+- `foundry.toml` - Configuration with zkSync enabled
 
 ## Usage
 
 ### Build
-
 ```shell
-$ forge build
+forge build
 ```
 
-### Test
-
+### Test with zkSync
 ```shell
-$ forge test
+forge test --zksync
 ```
 
-### Format
-
+### Test without zkSync
 ```shell
-$ forge fmt
+forge test
 ```
 
-### Gas Snapshots
+---
 
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+**Note:** If you can reproduce the issue with different conditions, please let us know what's missing from this setup!
